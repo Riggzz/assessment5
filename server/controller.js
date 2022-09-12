@@ -24,25 +24,42 @@ module.exports = {
 
     createCity: (req, res) => {
 
-    let {
-        firstName, 
-        lastName,
-        phoneNumber,
-        email, 
-        address,
-        city,
-        state,
-        zipCode
-    } = req.body
+    let {name, rating, countryId} = req.body
 
     sequelize.query(`
-    UPDATE cities
-    SET
-    name = '${Name}',
-    rating = '${rating}',
-    WHERE country_id = ${countryId};
+    INSERT INTO cities
+    (name, rating, country_id)
+    VALUES
+    ('${name}', ${rating}, ${countryId});
     `)
-    .then(() => res.sendStatus(200))
+    .then((response) => {
+        const returnData = response[0]
+        res.sendStatus(returnData)
+        })
+
+    .catch((err) => console.log(err))
+   },
+
+   getCities: (req, res) => {
+    sequelize.query(`
+        SELECT 
+            cities.city_id,
+            cities.name AS city, 
+            cities.rating, 
+            countries.country_id, 
+            countries.name AS country
+        FROM 
+            cities
+        JOIN 
+            countries
+        ON 
+            cities.country_id = countries.country_id   
+    `)
+    .then((response) => {
+        const returnData = response[0]
+        res.sendStatus(returnData)
+        })
+
     .catch((err) => console.log(err))
    },
 
@@ -51,7 +68,7 @@ module.exports = {
             drop table if exists cities;
             drop table if exists countries;
 
-            create table countries (
+            CREATE TABLE countries (
                 country_id serial primary key, 
                 name varchar
             );
@@ -60,7 +77,7 @@ module.exports = {
                 city__id SERIAL PRIMARY KEY, 
                 name varchar(100), 
                 rating INT, 
-                country_id INT REFRENCES countries(country_id), 
+                country_id INT REFERENCES countries(country_id) 
             );
 
             insert into countries (name)
